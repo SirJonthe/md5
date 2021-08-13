@@ -6,7 +6,7 @@ A C++ implementation of the MD5 message digest algorithm heavily inspired by the
 
 https://en.wikipedia.org/wiki/MD5
 
-This implementation does not allocate data on the heap while processing (but may allocate a some data on the stack if the input message is not 4-byte aligned).
+This implementation does not allocate data on the heap while processing.
 
 ## Note
 
