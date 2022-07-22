@@ -119,12 +119,12 @@ bool md5::sum::operator!=(const md5::sum &r) const
 	return true;
 }
 
-md5::sum::operator const uint8_t*( void ) const
+md5::sum::operator const u8*( void ) const
 {
 	return m_sum.u8;
 }
 
-md5::sum::operator uint8_t*( void )
+md5::sum::operator u8*( void )
 {
 	return m_sum.u8;
 }
