@@ -1,6 +1,6 @@
 // md5.h
 // github.com/SirJonthe
-// 2019, 2021
+// 2019, 2021, 2022
 
 // Public domain
 // Derived from the RSA Data Security, Inc. MD5 Message-Digest Algorithm.
@@ -13,73 +13,162 @@
 #define MD5_H_INCLUDED__
 
 #include <cstdint>
+#include <climits>
 #include <string>
 
-// @data md5sum
-// @info Container for an MD5 digest. Takes an arbitrary input of bytes (in the form of a string) and converts it into a 16 byte number (or 'digest') representing that input with a fair degree of uniqueness.
-class md5sum
+// md5
+// Container for an MD5 digest. Takes an arbitrary input of bytes (in the form of a string) and converts it into a 16 byte number (or 'digest') representing that input with a fair degree of uniqueness.
+class md5
 {
 private:
-	uint8_t m_digest[16];
-
-private:
-	static void blit(const char *src, char *dst);
-	static void blit(const char *src, char *dst, uint32_t num);
-	static uint32_t leftrotate(uint32_t x, uint32_t c);
-	static void process_chunk(const uint32_t *M, uint32_t *X);
+	// constants
+	static constexpr uint32_t BYTES_PER_DIGEST = 16;
+	static constexpr uint32_t WORDS_PER_DIGEST = BYTES_PER_DIGEST / sizeof(uint32_t);
+	static constexpr uint32_t BYTES_PER_CHUNK  = 512 / CHAR_BIT;
+	static constexpr uint32_t WORDS_PER_CHUNK  = BYTES_PER_CHUNK / sizeof(uint32_t);
 
 public:
-	md5sum( void );
-	md5sum(const md5sum&) = default;
-	md5sum &operator=(const md5sum&) = default;
-	md5sum(const std::string &message);
-	md5sum(const char *message, uint64_t byte_count);
-	md5sum &operator=(const std::string &message);
+	// sum
+	// The output digest of data after MD5 transformation.
+	class sum
+	{
+		friend class md5;
+	private:
+		union {
+			uint32_t u32[WORDS_PER_DIGEST];
+			uint8_t  u8[BYTES_PER_DIGEST];
+		} m_sum;
 	
-	// @algo sum
-	// @info Generates a digest based on the input and stores it in the container.
-	// @in message -> The message to digest.
-	void sum(const std::string &message);
-	
-	// @algo sum
-	// @info Generates a digest based on the input and stores it in the container.
-	// @in
-	//   message -> The message to digest.
-	//   byte_count -> The size (in bytes) of the input message.
-	void sum(const char *message, uint64_t byte_count);
-	
-	// @algo hex
-	// @inout The digest converted as a human readable hexadecimal ASCII string. Needs to be at least 32 bytes long. Function does not emit null terminator in out string.
-	void hex(char *out) const;
+	public:
+		// operator<
+		// Compares l < r.
+		bool operator< (const sum &r) const;
+		// operator>
+		// Compares l > r.
+		bool operator> (const sum &r) const;
+		// operator<=
+		// Compares l <= r.
+		bool operator<=(const sum &r) const;
+		// operator>=
+		// Compares l >= r.
+		bool operator>=(const sum &r) const;
+		// operator==
+		// Compares l == r.
+		bool operator==(const sum &r) const;
+		// operator!=
+		// Compares l != r.
+		bool operator!=(const sum &r) const;
 
-	// @algo hex
-	// @out The digest converted as a human readable hexadecimal ASCII string.
-	std::string hex( void ) const;
+		// operator const uint8_t*
+		// Returns the bytes of the digest.
+		operator const uint8_t*( void ) const;
+		// operator uint8_t*
+		// Returns the bytes of the digest.
+		operator uint8_t*( void );
 
-	// @algo ==
-	// @info Tests for equality between digests.
-	// @in Right-hand side MD5 value.
-	// @out TRUE on equality.
-	bool operator==(const md5sum &r) const;
-	
-	// @algo !=
-	// @info Tests for inequality between digests.
-	// @in Right-hand side MD5 value.
-	// @out TRUE on inequality.
-	bool operator!=(const md5sum &r) const;
-	
-	// @algo uint8_t*
-	// @info Returns the pointer to the digest.
-	// @note It is assumed that the user knows the size of 16 bytes.
-	// @out The pointer to the digest.
-	operator const uint8_t*( void ) const;
+		// sprint_hex
+		// Prints the digest into a human-readable hexadeximal format stored in 'out' and returns 'out' incremented by the number of characters written. 
+		char *sprint_hex(char *out) const;
+		// sprint_bin
+		// Prints the digest into a human-readable binary format stored in 'out' and returns 'out' incremented by the number of characters written.
+		char *sprint_bin(char *out) const;
+
+		// hex
+		// Returns the human-readable hexadecimal format of the digest.
+		std::string hex( void ) const;
+		// bin
+		// Returns the human-readable binary format of the digest.
+		std::string bin( void ) const;
+	};
+
+private:
+	union {
+		uint32_t u32[WORDS_PER_DIGEST];
+		uint8_t  u8[BYTES_PER_DIGEST];
+	} m_state;
+	union {
+		uint32_t u32[WORDS_PER_CHUNK];
+		uint8_t  u8[BYTES_PER_CHUNK];
+	} m_chunk;
+	uint64_t m_message_size;
+	uint32_t m_chunk_size;
+
+private:
+	// blit
+	// Bit-block transfer of 64 bytes from 'src' to 'dst'.
+	static void blit(const uint8_t *src, uint8_t *dst);
+	// blit
+	// Bit-block transfer of 'num' bytes from 'src' to 'dst'. Fills remaining 64-'num' bytes in 'dst' with zero-value.
+	static void blit(const uint8_t *src, uint8_t *dst, uint32_t num);
+	// is_aligned
+	// Checks if the memory is aligned to a 4-byte boundry.
+	static bool is_aligned(const void *mem);
+	// leftrotate
+	// Returns a the left rotation of bits in 'x' by amount 'c'. Bits shifted out are shifted back in from the right.
+	static uint32_t leftrotate(uint32_t x, uint32_t c);
+	// process_chunk
+	// Processes a single message data block and transforms the digest values in 'X'.
+	void process_chunk(const uint32_t *M, uint32_t *X) const;
+	// process_final_chunks
+	// Processes the remaining data in the block buffer so that a digest can be returned.
+	void process_final_chunks(uint32_t *X) const;
+
+public:
+	// md5
+	// Default constructor. Sets up the initial internal state.
+	md5( void );
+	// md5
+	// Ingest an initial message. Length is inferred from zero-terminator.
+	md5(const char *message);
+	// md5
+	// Ingest an initial message. Explicit length.
+	md5(const void *message, uint64_t byte_count);
+	// ~md5
+	// Clear out sensitive data.
+	~md5( void );
+
+	// md5
+	// Default copy constructor.
+	md5(const md5&) = default;
+	// operator=
+	// Default assingment operator.
+	md5 &operator=(const md5&) = default;
+
+	// operator()
+	// Ingest a message. Length is inferred from zero-terminator.
+	md5 &operator()(const char *message);
+	// operator()
+	// Ingest a message. Explicit length.
+	md5 &operator()(const void *message, uint64_t byte_count);
+
+	// operator() const
+	// Returns a copy of current state with ingested message. Length is inferred from zero-terminator.
+	md5 operator()(const char *message) const;
+	// operator() const
+	// Returns a copy of current state with ingested message. Explicit length.
+	md5 operator()(const void *message, uint64_t byte_count) const;
+
+	// ingest
+	// Ingest a message. Length is inferred from zero-terminator.
+	void ingest(const char *message);
+	// ingest
+	// Ingest a message. Explicit length.
+	void ingest(const void *message, uint64_t byte_count);
+
+	// digest
+	// Returns the digest of all ingested messages.
+	sum digest( void ) const;
+	// operator digest
+	// Implicitly converts state into digest of all ingested messages.
+	operator sum( void ) const;
 };
 
-// @algo md5
-// @info Helper function designed to take a message and return its ASCII hex string.
-// @in message -> The message to digest.
-// @out The ASCII hex string digest.
-std::string md5(const std::string &message);
+// md5hex
+// Returns the MD5 digest of the input message as a human-readable hex string.
+std::string md5hex(const char *message);
+// md5hex
+// Returns the MD5 digest of the input message as a human-readable hex string.
+std::string md5hex(const void *message, uint64_t byte_count);
 
 #endif
 
