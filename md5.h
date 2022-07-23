@@ -17,7 +17,9 @@
 #include <string>
 
 // md5
-// Container for an MD5 digest. Takes an arbitrary input of bytes (in the form of a string) and converts it into a 16 byte number (or 'digest') representing that input with a fair degree of uniqueness.
+// Processes messages of any length into a relatively unique identifyer with a length of 16 bytes. Functions by ingesting any number of messages via the 'ingest' function (alternatively via constructors and () operators) and finally outputting an MD5 sum via the 'digest' function. New messages can be appended even after a digest has been generated.
+// LIMITATIONS: MD5 can only process a maximum of 2^64-1 bytes (be careful as there is no guard for overflow). This implementation only processes input messages in whole bytes, and can not be used to process messages composed of individual bits.
+// SECURITY NOTE: MD5 is considered insecure for cryptographic purposes.
 class md5
 {
 private:
