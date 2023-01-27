@@ -1,9 +1,8 @@
-// md5.cpp
-// github.com/SirJonthe
-// 2019, 2021, 2022
-
-// Public domain
-// Derived from the RSA Data Security, Inc. MD5 Message-Digest Algorithm.
+/// @file
+/// @author github.com/SirJonthe
+/// @date 2019, 2021, 2022
+/// @copyright Public domain. Derived from the RSA Data Security, Inc. MD5 Message-Digest Algorithm.
+/// @license BSD-3-Clause
 
 // THIS SOFTWARE IS PROVIDED ``AS IS'' AND WITHOUT ANY EXPRESS OR
 // IMPLIED WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED
@@ -17,36 +16,35 @@ typedef uint16_t u16;
 typedef uint32_t u32;
 typedef uint64_t u64;
 
-// ENDIAN_BYTES
-// Constant to determine endianness of current machine.
-const u8 ENDIAN_BYTES[sizeof(u32)] = { 1, 2, 3, 4 };
+const u8 ENDIAN_BYTES[sizeof(u32)] = { 1, 2, 3, 4 }; // Constant to determine endianness of current machine.
 
-// is_big
-// Determines if the machine endian is big at run-time.
+/// Determines if the machine endian is big at run-time.
+///
+/// @returns a boolean indicating true if the machine is big endian, and false otherwise.
 bool is_big( void )
 {
 	return *reinterpret_cast<const u32*>(ENDIAN_BYTES) == 0x01020304;
 }
 
-// is_lil
-// Determines if the machine endian is little at run-time.
+/// Determines if the machine endian is little at run-time.
+///
+/// @returns a boolean indicating true if the machine is little endian, and false otherwise.
 bool is_lil( void )
 {
 	return *reinterpret_cast<const u32*>(ENDIAN_BYTES) == 0x4030201;
 }
 
-static constexpr u32 CHUNK_BYTESIZE = 512 / CHAR_BIT;
+static constexpr u32 CHUNK_BYTESIZE = 512 / CHAR_BIT; // The number of bytes in a MD5 chunk.
 
-// Table of shift offsets
-static constexpr u32 ShiftTable[CHUNK_BYTESIZE] = {
+
+static constexpr u32 ShiftTable[CHUNK_BYTESIZE] = { // Table of shift offsets
 	7, 12, 17, 22,  7, 12, 17, 22,  7, 12, 17, 22,  7, 12, 17, 22,
 	5,  9, 14, 20,  5,  9, 14, 20,  5,  9, 14, 20,  5,  9, 14, 20,
 	4, 11, 16, 23,  4, 11, 16, 23,  4, 11, 16, 23,  4, 11, 16, 23,
 	6, 10, 15, 21,  6, 10, 15, 21,  6, 10, 15, 21,  6, 10, 15, 21
 };
 
-// Precomputed table of integer sines (in radians)
-static constexpr u32 SineTable[CHUNK_BYTESIZE] = {
+static constexpr u32 SineTable[CHUNK_BYTESIZE] = { // Precomputed table of integer sines (in radians)
 	0xd76aa478, 0xe8c7b756, 0x242070db, 0xc1bdceee,
 	0xf57c0faf, 0x4787c62a, 0xa8304613, 0xfd469501,
 	0x698098d8, 0x8b44f7af, 0xffff5bb1, 0x895cd7be,
