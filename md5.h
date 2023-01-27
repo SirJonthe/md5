@@ -195,14 +195,14 @@ public:
 	///
 	/// @param message the message to ingest.
 	///
-	/// @returns a modified md5 concorporating the ingestion.
+	/// @returns a modified md5 incorporating the ingestion.
 	md5 operator()(const char *message) const;
 	/// Returns a copy of current state with ingested message. Explicit length.
 	///
 	/// @param message the message to ingest.
 	/// @param byte_count the number of bytes in the message to ingest.
 	///
-	/// @returns a modified md5 concorporating the ingestion.
+	/// @returns a modified md5 incorporating the ingestion.
 	md5 operator()(const void *message, uint64_t byte_count) const;
 
 	/// Ingest a message. Length is inferred from zero-terminator.
